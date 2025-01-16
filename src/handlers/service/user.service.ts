@@ -61,7 +61,7 @@ export class UserService {
       throw new Error('パスワードが違います');
     }
 
-    const payload = { userId: user.user_id, userName: user.user_name };
+    const payload = { sub: user.user_id, username: user.user_name };
     const token = this.jwtService.sign(payload);
 
     return { 
