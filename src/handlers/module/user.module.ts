@@ -9,7 +9,7 @@ import { User } from 'src/database/entities/UserTable.entity';
   imports: [
     TypeOrmModule.forFeature([User]),
     JwtModule.register({
-      secret: 'yourSecretKey',
+      secret: 'defaultSecret',
       signOptions: { expiresIn: '1h' },
     }),
   ],

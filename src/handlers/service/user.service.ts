@@ -67,7 +67,7 @@ export class UserService {
     return { 
       success: true,
       message: 'ログインできました',
-      token 
+      token : token
     };
   }
 

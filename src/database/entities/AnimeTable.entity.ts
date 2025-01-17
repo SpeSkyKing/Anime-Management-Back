@@ -21,4 +21,7 @@ export class Anime {
 
   @Column()
   speed: boolean;
+
+  @Column()
+  iswatched: boolean;
 }

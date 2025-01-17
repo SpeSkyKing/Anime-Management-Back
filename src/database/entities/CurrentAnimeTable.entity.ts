@@ -11,7 +11,7 @@ export class CurrentAnime {
   user_id: number;
 
   @PrimaryColumn()
-  year: Date;
+  year: number;
 
   @Column('enum', { enum: ['1', '2', '3', '4'] })
   season: string;
