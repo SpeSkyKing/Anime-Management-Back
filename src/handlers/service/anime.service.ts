@@ -54,7 +54,6 @@ export class AnimeService {
           delivery_weekday:animeData.deliveryWeekday,
           delivery_time:animeData.deliveryTime
         });
-        console.log(current);
         await this.currentAnimeRepository.save(current);
       }else{
         const jstDate = new Date();
