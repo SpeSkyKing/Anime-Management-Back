@@ -81,23 +81,91 @@ export class AnimeService {
   }
 
   async extractSeasonAndYear(releaseDate: string) {
-    const date = new Date(releaseDate); // ReleaseDateをDate型に変換
-    const month = date.getMonth() + 1;  // 月を取得 (0月から始まるため +1 する)
-    const year = date.getFullYear();    // 年を取得
+    const date = new Date(releaseDate);
+    const month = date.getMonth() + 1; 
+    const year = date.getFullYear();
     
     let season: string;
   
-    // 季節を決定
     if (month >= 1 && month <= 3) {
-      season = '冬';  // 1~3月 → 冬
+      season = '冬';
     } else if (month >= 4 && month <= 6) {
-      season = '春';  // 4~6月 → 春
+      season = '春';
     } else if (month >= 7 && month <= 9) {
-      season = '夏';  // 7~9月 → 夏
+      season = '夏';
     } else {
-      season = '秋';  // 10~12月 → 秋
+      season = '秋';
     }
   
     return { year, season};
+  }
+
+  async searchCurrentList(user: any){
+    try {
+      const currentAnimeData = await this.currentAnimeRepository
+      .createQueryBuilder('current_anime')
+      .select([
+        'current_anime.year AS year',
+        'current_anime.season AS season',
+        'current_anime.releaseDate AS releasedate',
+        'current_anime.delivery_weekday AS delivery_weekday',
+        'current_anime.delivery_time AS delivery_time',
+        'anime.anime_id AS anime_id',
+        'anime.user_id AS user_id',
+        'anime.anime_name AS anime_name',
+        'anime.episode AS episode',
+        'anime.favoriteCharacter AS favoriteCharacter',
+        'anime.speed AS speed',
+      ])
+      .innerJoin('current_anime.anime', 'anime') 
+      .where('current_anime.user_id = :userId', { userId: user.userId })
+      .orderBy({
+        'current_anime.delivery_weekday': 'ASC',
+        'current_anime.delivery_time': 'ASC'
+      })
+      .getRawMany();
+      return {
+        success: true,
+        data:currentAnimeData,
+        message: 'アニメが取得されました',
+      };
+    } catch (error) {
+      console.error('アニメデータの取得エラー:', error);
+      return {
+        success: false,
+        message: 'アニメの取得に失敗しました',
+        error: error.message,
+      };
+    }
+  }
+
+  async currentAnimeEpisodeUp(animeId: number, user: any){
+    try {
+      const currentAnime = await this.animeRepository.findOne({
+        where: {
+          anime_id: animeId,
+          user: { user_id: user.user_id },
+        },
+        relations: ['user'],
+      });
+
+    if (!currentAnime) {
+      return {
+        success: false,
+        message: '対象のアニメが見つかりませんでした',
+      };
+    }
+
+    currentAnime.episode += 1;
+
+    await this.animeRepository.save(currentAnime);
+    }catch (error) {
+      console.error('話数カウントアップエラー:', error);
+      return {
+        success: false,
+        message: '話数のカウントアップに失敗しました',
+        error: error.message,
+      };
+    }
   }
 }

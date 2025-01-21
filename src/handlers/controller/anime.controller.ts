@@ -14,4 +14,21 @@ export class AnimeController {
   ) {
     return this.animeService.registerAnime(animeData, req.user);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('current/list')
+  async searchCurrentList(
+    @Request() req: any,
+  ) {
+    return this.animeService.searchCurrentList(req.user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('current/episodeUp')
+  async currentAnimeEpisodeUp(
+    @Request() req: any,
+    @Body('animeId') animeId: number,
+  ) {
+    return this.animeService.currentAnimeEpisodeUp(animeId,req.user);
+  }
 }
