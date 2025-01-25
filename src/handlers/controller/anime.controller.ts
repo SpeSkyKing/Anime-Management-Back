@@ -31,4 +31,21 @@ export class AnimeController {
   ) {
     return this.animeService.currentAnimeEpisodeUp(animeId,req.user);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('past/list')
+  async searchPastList(
+    @Request() req: any,
+  ) {
+    return this.animeService.searchPastList(req.user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('past/episodeUp')
+  async pastAnimeEpisodeUp(
+    @Request() req: any,
+    @Body('animeId') animeId: number,
+  ) {
+    return this.animeService.pastAnimeEpisodeUp(animeId,req.user);
+  }
 }

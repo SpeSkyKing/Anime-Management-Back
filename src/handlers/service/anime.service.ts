@@ -29,7 +29,7 @@ export class AnimeService {
 
       await this.animeRepository.save(anime);
 
-      if(animeData.seasonType){
+      if(animeData.seasonType == "1"){
         const date = new Date(animeData.ReleaseDate);
         const month = date.getMonth() + 1;
         const year = date.getFullYear();
@@ -56,12 +56,12 @@ export class AnimeService {
         });
         await this.currentAnimeRepository.save(current);
       }else{
-        const jstDate = new Date();
-        jstDate.setHours(jstDate.getHours() + 9);
+        const jstDate = new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" });
+        const dateInJST = new Date(jstDate);
         const past = this.pastAnimeRepository.create({
           anime:anime,
           user_id: user.userId,
-          watching_start_date:jstDate
+          watching_start_date:dateInJST
         });
         await this.pastAnimeRepository.save(past);
       }
@@ -168,4 +168,69 @@ export class AnimeService {
       };
     }
   }
+
+  async searchPastList(user: any){
+    try {
+      const pastAnimeData = await this.pastAnimeRepository
+      .createQueryBuilder('past_anime')
+      .select([
+        'past_anime.watching_start_date AS watching_start_date',
+        'anime.anime_id AS anime_id',
+        'anime.user_id AS user_id',
+        'anime.anime_name AS anime_name',
+        'anime.episode AS episode',
+        'anime.favoriteCharacter AS favoriteCharacter',
+        'anime.speed AS speed',
+      ])
+      .innerJoin('past_anime.anime', 'anime') 
+      .where('past_anime.user_id = :userId', { userId: user.userId })
+      .orderBy({
+        'past_anime.watching_start_date': 'ASC'
+      })
+      .getRawMany();
+      return {
+        success: true,
+        data:pastAnimeData,
+        message: 'アニメが取得されました',
+      };
+    } catch (error) {
+      console.error('アニメデータの取得エラー:', error);
+      return {
+        success: false,
+        message: 'アニメの取得に失敗しました',
+        error: error.message,
+      };
+    }
+  }
+
+  async pastAnimeEpisodeUp(animeId: number, user: any){
+    try {
+      const pastAnime = await this.animeRepository.findOne({
+        where: {
+          anime_id: animeId,
+          user: { user_id: user.user_id },
+        },
+        relations: ['user'],
+      });
+
+    if (!pastAnime) {
+      return {
+        success: false,
+        message: '対象のアニメが見つかりませんでした',
+      };
+    }
+
+    pastAnime.episode += 1;
+
+    await this.animeRepository.save(pastAnime);
+    }catch (error) {
+      console.error('話数カウントアップエラー:', error);
+      return {
+        success: false,
+        message: '話数のカウントアップに失敗しました',
+        error: error.message,
+      };
+    }
+  }
+
 }
