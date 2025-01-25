@@ -66,4 +66,21 @@ export class AnimeController {
   ) {
     return this.animeService.pastAnimeFinishWatching(animeId,req.user);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('viewed/list')
+  async searchviewedList(
+    @Request() req: any,
+  ) {
+    return this.animeService.searchviewedList(req.user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('viewed/again')
+  async viewedAgainAnime(
+    @Request() req: any,
+    @Body('animeId') animeId: number,
+  ) {
+    return this.animeService.viewedAgainAnime(animeId,req.user);
+  }
 }

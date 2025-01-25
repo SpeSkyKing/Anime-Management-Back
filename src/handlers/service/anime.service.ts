@@ -163,6 +163,9 @@ export class AnimeService {
     currentAnime.episode += 1;
 
     await this.animeRepository.save(currentAnime);
+    return {
+      success: true,
+    };
     }catch (error) {
       console.error('話数カウントアップエラー:', error);
       return {
@@ -204,7 +207,9 @@ export class AnimeService {
     });
 
     await this.viedAnimeRepository.save(viedAnime);
-
+    return {
+      success: true,
+    };
     }catch (error) {
       console.error('話数カウントアップエラー:', error);
       return {
@@ -270,6 +275,9 @@ export class AnimeService {
     pastAnime.episode += 1;
 
     await this.animeRepository.save(pastAnime);
+    return {
+      success: true,
+    };
     }catch (error) {
       console.error('話数カウントアップエラー:', error);
       return {
@@ -304,14 +312,16 @@ export class AnimeService {
     const jstDate = new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" });
     const dateInJST = new Date(jstDate);
 
-    const viedAnime = this.viedAnimeRepository.create({
+    const viewedAnime = this.viedAnimeRepository.create({
       anime:pastAnime,
       user_id: user.userId,
       viewed_end_date:dateInJST
     });
 
-    await this.viedAnimeRepository.save(viedAnime);
-
+    await this.viedAnimeRepository.save(viewedAnime);
+    return {
+      success: true,
+    };
     }catch (error) {
       console.error('視聴完了エラー:', error);
       return {
@@ -322,4 +332,81 @@ export class AnimeService {
     }
   }
 
+  async searchviewedList(user: any){
+    try {
+      const viewedAnimeData = await this.viedAnimeRepository
+      .createQueryBuilder('viewed_anime')
+      .select([
+        'viewed_anime.viewed_end_date AS viewed_end_date',
+        'anime.anime_id AS anime_id',
+        'anime.user_id AS user_id',
+        'anime.anime_name AS anime_name',
+        'anime.episode AS episode',
+        'anime.favoriteCharacter AS favoriteCharacter',
+        'anime.speed AS speed',
+        'anime.iswatched AS iswatched'
+      ])
+      .innerJoin('viewed_anime.anime', 'anime') 
+      .where('viewed_anime.user_id = :userId AND anime.iswatched = :status', { userId: user.userId, status: true })
+      .orderBy({
+        'viewed_anime.viewed_end_date': 'ASC'
+      })
+      .getRawMany();
+      return {
+        success: true,
+        data:viewedAnimeData,
+        message: 'アニメが取得されました',
+      };
+    } catch (error) {
+      console.error('アニメデータの取得エラー:', error);
+      return {
+        success: false,
+        message: 'アニメの取得に失敗しました',
+        error: error.message,
+      };
+    }
+  }
+
+  async viewedAgainAnime(animeId: number,user: any){
+    try {
+      const viewedAnime = await this.animeRepository.findOne({
+        where: {
+          anime_id: animeId,
+          user: { user_id: user.user_id },
+        },
+        relations: ['user'],
+      });
+
+    if (!viewedAnime) {
+      return {
+        success: false,
+        message: '対象のアニメが見つかりませんでした',
+      };
+    }
+    viewedAnime.iswatched = false;
+    viewedAnime.episode = 1;
+    await this.animeRepository.save(viewedAnime);
+
+    const jstDate = new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" });
+    const dateInJST = new Date(jstDate);
+
+    const pastAnime = this.pastAnimeRepository.create({
+      anime:viewedAnime,
+      user_id: user.userId,
+      watching_start_date:dateInJST
+    });
+
+    await this.pastAnimeRepository.save(pastAnime);
+    return {
+      success: true,
+    };
+    }catch (error) {
+      console.error('再視聴エラー:', error);
+      return {
+        success: false,
+        message: '視聴完了に失敗しました',
+        error: error.message,
+      };
+    }
+  }
 }
