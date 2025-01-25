@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Anime } from '../../database/entities/AnimeTable.entity';
 import { CurrentAnime } from '../../database/entities/CurrentAnimeTable.entity';
 import { PastAnime } from '../../database/entities/PastAnimeTable.entity';
+import { ViewedAnime } from 'src/database/entities/ViewedAnimeTable.entity';
 
 @Injectable()
 export class AnimeService {
@@ -13,7 +14,9 @@ export class AnimeService {
     @InjectRepository(CurrentAnime)
     private readonly currentAnimeRepository: Repository<CurrentAnime>,
     @InjectRepository(PastAnime)
-    private readonly pastAnimeRepository: Repository<PastAnime>
+    private readonly pastAnimeRepository: Repository<PastAnime>,
+    @InjectRepository(ViewedAnime)
+    private readonly viedAnimeRepository:Repository<ViewedAnime>
   ) {}
 
   async registerAnime(animeData: any, user: any) {
@@ -24,7 +27,7 @@ export class AnimeService {
         episode: 1,
         favoriteCharacter: animeData.favoriteCharacter,
         speed: animeData.speed,
-        iswatched:true,
+        iswatched:false,
       });
 
       await this.animeRepository.save(anime);
@@ -116,9 +119,10 @@ export class AnimeService {
         'anime.episode AS episode',
         'anime.favoriteCharacter AS favoriteCharacter',
         'anime.speed AS speed',
+        'anime.iswatched AS iswatched'
       ])
       .innerJoin('current_anime.anime', 'anime') 
-      .where('current_anime.user_id = :userId', { userId: user.userId })
+      .where('current_anime.user_id = :userId AND anime.iswatched = :status', { userId: user.userId, status: false })
       .orderBy({
         'current_anime.delivery_weekday': 'ASC',
         'current_anime.delivery_time': 'ASC'
@@ -169,6 +173,48 @@ export class AnimeService {
     }
   }
 
+  async currentAnimeFinishWatching(animeId: number, user: any){
+    try {
+      const currentAnime = await this.animeRepository.findOne({
+        where: {
+          anime_id: animeId,
+          user: { user_id: user.user_id },
+        },
+        relations: ['user'],
+      });
+
+    if (!currentAnime) {
+      return {
+        success: false,
+        message: '対象のアニメが見つかりませんでした',
+      };
+    }
+
+    currentAnime.iswatched = true;
+
+    await this.animeRepository.save(currentAnime);
+
+    const jstDate = new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" });
+    const dateInJST = new Date(jstDate);
+
+    const viedAnime = this.viedAnimeRepository.create({
+      anime:currentAnime,
+      user_id: user.userId,
+      viewed_end_date:dateInJST
+    });
+
+    await this.viedAnimeRepository.save(viedAnime);
+
+    }catch (error) {
+      console.error('話数カウントアップエラー:', error);
+      return {
+        success: false,
+        message: '話数のカウントアップに失敗しました',
+        error: error.message,
+      };
+    }
+  }
+
   async searchPastList(user: any){
     try {
       const pastAnimeData = await this.pastAnimeRepository
@@ -181,9 +227,10 @@ export class AnimeService {
         'anime.episode AS episode',
         'anime.favoriteCharacter AS favoriteCharacter',
         'anime.speed AS speed',
+        'anime.iswatched AS iswatched'
       ])
       .innerJoin('past_anime.anime', 'anime') 
-      .where('past_anime.user_id = :userId', { userId: user.userId })
+      .where('past_anime.user_id = :userId AND anime.iswatched = :status', { userId: user.userId, status: false })
       .orderBy({
         'past_anime.watching_start_date': 'ASC'
       })
@@ -228,6 +275,48 @@ export class AnimeService {
       return {
         success: false,
         message: '話数のカウントアップに失敗しました',
+        error: error.message,
+      };
+    }
+  }
+
+  async pastAnimeFinishWatching(animeId: number, user: any){
+    try {
+      const pastAnime = await this.animeRepository.findOne({
+        where: {
+          anime_id: animeId,
+          user: { user_id: user.user_id },
+        },
+        relations: ['user'],
+      });
+
+    if (!pastAnime) {
+      return {
+        success: false,
+        message: '対象のアニメが見つかりませんでした',
+      };
+    }
+
+    pastAnime.iswatched = true;
+
+    await this.animeRepository.save(pastAnime);
+
+    const jstDate = new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" });
+    const dateInJST = new Date(jstDate);
+
+    const viedAnime = this.viedAnimeRepository.create({
+      anime:pastAnime,
+      user_id: user.userId,
+      viewed_end_date:dateInJST
+    });
+
+    await this.viedAnimeRepository.save(viedAnime);
+
+    }catch (error) {
+      console.error('視聴完了エラー:', error);
+      return {
+        success: false,
+        message: '視聴完了エラーに失敗しました',
         error: error.message,
       };
     }

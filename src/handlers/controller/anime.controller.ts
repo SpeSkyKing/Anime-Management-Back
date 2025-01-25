@@ -33,6 +33,15 @@ export class AnimeController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post('current/finishWatching')
+  async currentAnimeFinishWatching(
+    @Request() req: any,
+    @Body('animeId') animeId: number,
+  ) {
+    return this.animeService.currentAnimeFinishWatching(animeId,req.user);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post('past/list')
   async searchPastList(
     @Request() req: any,
@@ -47,5 +56,14 @@ export class AnimeController {
     @Body('animeId') animeId: number,
   ) {
     return this.animeService.pastAnimeEpisodeUp(animeId,req.user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('past/finishWatching')
+  async pastAnimeFinishWatching(
+    @Request() req: any,
+    @Body('animeId') animeId: number,
+  ) {
+    return this.animeService.pastAnimeFinishWatching(animeId,req.user);
   }
 }
