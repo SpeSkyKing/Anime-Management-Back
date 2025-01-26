@@ -125,7 +125,8 @@ export class AnimeService {
       .where('current_anime.user_id = :userId AND anime.iswatched = :status', { userId: user.userId, status: false })
       .orderBy({
         'current_anime.delivery_weekday': 'ASC',
-        'current_anime.delivery_time': 'ASC'
+        'current_anime.delivery_time': 'ASC',
+        'anime.anime_id': 'ASC'
       })
       .getRawMany();
       return {
