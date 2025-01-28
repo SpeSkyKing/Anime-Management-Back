@@ -1,4 +1,5 @@
 import { Body ,Injectable} from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -15,6 +16,14 @@ export class UserService {
   
   async registerUser(@Body() userData: any) {
     try {
+      const { userName } = userData;
+
+      const existsuser = await this.userRepository.findOne({ where: { user_name: userName } });
+
+      if (existsuser) {
+        throw new BadRequestException('既にそのユーザー名は利用されています');
+      }
+
       const saltRounds = 10;
       const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
       
@@ -29,7 +38,6 @@ export class UserService {
          password:hashedPassword
       });
 
-      //データベースに保存
       const savedUser = await this.userRepository.save(user);
   
       console.log('ユーザー登録成功',savedUser);
@@ -38,11 +46,14 @@ export class UserService {
         message: 'ユーザーが登録されました',
       };
     } catch (error) {
-      console.error('ユーザーの登録エラー:', error);
-      return {
-        success: false,
-        message: 'ユーザーの登録に失敗しました',
-      };
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error instanceof TypeError) {
+        throw new BadRequestException('リクエストデータに問題があります');
+      } else {
+        console.error('予期しないエラー:', error);
+        throw new BadRequestException('サーバーでエラーが発生しました');
+      }
     }
   }
 
@@ -50,15 +61,15 @@ export class UserService {
     const { userName, password } = userData;
 
     const user = await this.userRepository.findOne({ where: { user_name: userName } });
-
+    
     if (!user) {
-      throw new Error('ユーザーが見つかりません');
+      throw new BadRequestException('ユーザーが見つかりません');
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     
     if (!isPasswordValid) {
-      throw new Error('パスワードが違います');
+      throw new BadRequestException('パスワードが違います');
     }
 
     const payload = { sub: user.user_id, username: user.user_name };
