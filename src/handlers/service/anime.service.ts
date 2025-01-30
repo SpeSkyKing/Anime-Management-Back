@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { BadRequestException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { Anime } from '../../database/entities/AnimeTable.entity';
 import { CurrentAnime } from '../../database/entities/CurrentAnimeTable.entity';
@@ -21,6 +22,13 @@ export class AnimeService {
 
   async registerAnime(animeData: any, user: any) {
     try {
+
+      const existsanime = await this.animeRepository.
+      findOne({ where: { anime_name: animeData.animeName ,user: { user_id: user.user_id }   } });
+      if (existsanime) {
+        throw new BadRequestException('既にそのアニメは登録されています');
+      }
+
       const anime = this.animeRepository.create({
         user: user.userId,
         anime_name: animeData.animeName,
@@ -73,13 +81,15 @@ export class AnimeService {
         success: true,
         message: 'アニメが登録されました',
       };
-    } catch (error) {
-      console.error('アニメデータの登録エラー:', error);
-      return {
-        success: false,
-        message: 'アニメの登録に失敗しました',
-        error: error.message,
-      };
+    }catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error instanceof TypeError) {
+        throw new BadRequestException('リクエストデータに問題があります');
+      } else {
+        console.error('予期しないエラー:', error);
+        throw new BadRequestException('サーバーでエラーが発生しました');
+      }
     }
   }
 
