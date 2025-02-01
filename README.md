@@ -1,100 +1,75 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# アニメ管理アプリケーション（バックエンド）
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## 🚀 アプリ概要
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+このバックエンドアプリケーションは、アニメの視聴状況を管理するAPIです。  
+ユーザーがアニメの進行状況を管理できるようにするため、**Nest.js** と **PostgreSQL** を利用して実装されています。  
+主に**JWTによる認証**と**TypeORM**でデータベース管理を行います。
 
-## Description
+## 🔑 主要な技術要素
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **Nest.js**: サーバーサイドアプリケーションフレームワーク
+- **JWT (JSON Web Token)**: ユーザー認証に使用
+- **TypeORM**: データベース接続とORMの管理
+- **PostgreSQL**: 使用するデータベース
+- **TypeScript**: プロジェクト全体で使用
 
-## Project setup
+## 🛠️ 主な機能
 
-```bash
-$ npm install
-```
+1. **ユーザー認証**
+   - JWT を使用したトークンベースの認証
+   - ユーザー登録 (`/user/regist`)
+   - ユーザーログイン (`/user/login`)
 
-## Compile and run the project
+2. **アニメ管理**
+   - アニメの登録 (`/anime/register`)
+   - 視聴中アニメのリスト表示 (`/anime/current/list`)
+   - 視聴中アニメのエピソード更新 (`/anime/current/episodeUp`)
+   - 視聴中アニメを視聴終了としてマーク (`/anime/current/finishWatching`)
+   - 視聴済みアニメのリスト表示 (`/anime/viewed/list`)
+   - 視聴済みアニメを再度過去アニメとして登録 (`/anime/viewed/again`)
 
-```bash
-# development
-$ npm run start
+3. **データベース**
+   - PostgreSQL を使用してデータ保存
+   - TypeORM によるアニメデータ、ユーザーデータ管理
 
-# watch mode
-$ npm run start:dev
+## 🚀 API エンドポイント
 
-# production mode
-$ npm run start:prod
-```
+### ユーザー認証
+- `POST /user/regist`: ユーザーの新規登録  
+- `POST /user/login`: ユーザーのログイン（JWTトークンを取得）
 
-## Run tests
+### アニメ管理
+- `POST /anime/register`: アニメの新規登録
+  - Body: `{ title: string, speed: string, seasonType: string }`
+  
+- `POST /anime/current/list`: 現在のアニメリストを取得
+  - 認証: JWT 必須
+  
+- `POST /anime/current/episodeUp`: 現在アニメのエピソード更新
+  - Body: `{ animeId: number }`
+  - 認証: JWT 必須
 
-```bash
-# unit tests
-$ npm run test
+- `POST /anime/current/finishWatching`: 現在アニメを視聴終了としてマーク
+  - Body: `{ animeId: number }`
+  - 認証: JWT 必須
 
-# e2e tests
-$ npm run test:e2e
+- `POST /anime/past/list`: 過去アニメリストを取得
+  - 認証: JWT 必須
 
-# test coverage
-$ npm run test:cov
-```
+- `POST /anime/past/episodeUp`: 過去アニメのエピソード更新
+  - Body: `{ animeId: number }`
+  - 認証: JWT 必須
 
-## Deployment
+- `POST /anime/past/finishWatching`: 過去アニメを視聴終了としてマーク
+  - Body: `{ animeId: number }`
+  - 認証: JWT 必須
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+- `POST /anime/viewed/list`: 視聴済みアニメリストを取得
+  - 認証: JWT 必須
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+- `POST /anime/viewed/again`: 視聴済みアニメを過去アニメリストに再登録
+  - Body: `{ animeId: number }`
+  - 認証: JWT 必須
 
-```bash
-$ npm install -g mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
-# Anime-Management-Back
+---
